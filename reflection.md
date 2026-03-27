@@ -1,16 +1,34 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
+- This application is designed to help pet owners organize their daily responsibilities in a simple way. Users shohuld be able to enter basic information about themselves and their pets. The app allows users to add and edit tasks, with each task including key details such as duration and priority level. Using this information, the app should generate daily schedule that balances constraints and prioritizes the most important activities. The resulting plan is displayed in a simple and user-friendly format, with an explanation of how scheduling decisions were made to improve. Includes tests for scheduling behaviors, such as adding a pet, scheduling a walk, and verifying that daily tasks are correctly generated and organized.
 
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+UML design models a pet care management system that generates a daily care plan based on task priorities. The system has a object-oriented structure, where each class has a focused responsibility, and the Scheduler acts as the main entity for making decisons.
+
 - What classes did you include, and what responsibilities did you assign to each?
+Task
+    Responsibility: Represents a single care action for a pet
+Pet
+    Responsibility: Stores pet info that may influence which tasks are needed
+Owner
+    Responsibility: Represents the person's constraints and preferences for scheduling
+Scheduler
+    Responsibility: Builds and explains a daily care plan by ordering tasks based on priority and time constraints
 
 **b. Design changes**
 
 - Did your design change during implementation?
+Yes
 - If yes, describe at least one change and why you made it.
+
+priority now uses Literal — invalid values are caught by type checkers
+Added ScheduledTask dataclass pairing a Task with a start_time
+Replaced available_minutes with available_start/available_end for a real time window, with available_minutes as a computed property
+Added required_species to Task so species-specific tasks can be filtered
+self.scheduled stores the result of build_schedule so explain_plan can reference it
 
 ---
 
@@ -23,8 +41,11 @@
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+The scheduler uses a greedy, priority-first placement strategy: it sorts all tasks by priority and places each one sequentially, skipping any that don't fit in the remaining time window. This means a large low-priority task placed early can block several smaller high-priority tasks that would otherwise fit.
+
+For example, if a 60-minute "Grooming" task is scheduled before a 5-minute "Administer medication" task because both share the same priority level, the medication may get skipped even though it would have easily fit.
+
+This tradeoff is reasonable for a pet care planning assistant because the logic stays simple and predictable — owners can understand and override it manually. A more optimal approach such as bin-packing or backtracking search would find better schedules but would be significantly harder to explain to a non-technical user.
 
 ---
 
