@@ -68,7 +68,7 @@ if st.button("Add Pet"):
         st.success(f"Added {species} '{pet_name}' (age {age}).")
 
 if st.session_state.pets:
-    st.write("Your pets:")
+    st.caption(f"{len(st.session_state.pets)} pet(s) registered:")
     st.table([{"name": p.name, "species": p.species, "age": p.age} for p in st.session_state.pets])
 
 st.divider()
@@ -107,7 +107,7 @@ else:
 
     all_tasks = [(p.name, t) for p in st.session_state.pets for t in p.tasks]
     if all_tasks:
-        st.write("All tasks:")
+        st.caption(f"{len(all_tasks)} task(s) across all pets:")
 
         # ── Filters ──────────────────────────────────────────────────────────
         fcol1, fcol2 = st.columns(2)
@@ -167,7 +167,22 @@ if st.button("Build Schedule"):
 if st.session_state.scheduler is not None:
     sched = st.session_state.scheduler
     if sched.scheduled:
-        st.success(f"Scheduled {len(sched.scheduled)} task(s).")
+        total_scheduled = sum(item.task.duration_minutes for item in sched.scheduled)
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Tasks scheduled", len(sched.scheduled))
+        m2.metric("Time used (min)", total_scheduled)
+        m3.metric("Time remaining (min)", sched.owner.available_minutes - total_scheduled)
+
+        # Filter schedule display by pet using get_tasks_for_pet()
+        display_pet = st.selectbox(
+            "Show tasks for", ["All"] + [p.name for p in st.session_state.pets],
+            key="sched_filter_pet"
+        )
+        items = (
+            sched.get_tasks_for_pet(display_pet)
+            if display_pet != "All"
+            else sched.scheduled
+        )
         st.table([
             {
                 "time": item.start_time_str(),
@@ -178,12 +193,22 @@ if st.session_state.scheduler is not None:
                 "duration (min)": item.task.duration_minutes,
                 "priority": item.task.priority,
             }
-            for item in sched.scheduled
+            for item in items
         ])
+        # Conflict warnings from Scheduler.conflicts
+        if sched.conflicts:
+            st.error(f"{len(sched.conflicts)} conflict(s) detected — overlapping time slots:")
+            for *_, warning in sched.conflicts:
+                st.warning(warning)
+
         skipped = [t for t in sched.tasks if id(t) not in {id(item.task) for item in sched.scheduled}]
         if skipped:
             st.warning(f"{len(skipped)} task(s) skipped (not enough time):")
             for t in skipped:
-                st.write(f"- {t.title} ({t.duration_minutes} min, {t.priority})")
+                st.info(f"{t.title} — {t.duration_minutes} min, {t.priority} priority")
+
+        # Full plan explanation from Scheduler.explain_plan()
+        with st.expander("Full plan explanation"):
+            st.text(sched.explain_plan())
     else:
         st.error("No tasks fit within the owner's available time window.")

@@ -1,5 +1,7 @@
 # PawPal+ (Module 2 Project)
 
+<a href="/course_images/ai110/PawPalPlus.png" target="_blank"><img src='/course_images/ai110/PawPalPlus.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+
 You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
 
 ## Scenario
@@ -30,6 +32,31 @@ Your final app should:
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+## Features
+
+- **Priority-based scheduling** — Tasks are sorted high → medium → low before placement; high-priority tasks always appear first in the daily plan.
+- **Time window enforcement** — The scheduler only places tasks that fit within the owner's available window; tasks that overflow are skipped and reported.
+- **Chronological sorting** — The final schedule is sorted by start time so tasks are displayed in the order they occur, regardless of priority insertion order.
+- **Conflict detection** — Tasks pinned to the same time slot via `forced_start` are detected using overlap checking. Conflicting tasks emit a warning and are skipped — the program never crashes.
+- **Species filtering** — Tasks with a `required_species` are automatically excluded from pets of a different species at scheduler initialization.
+- **Daily and weekly recurrence** — Tasks with `frequency="daily"` or `frequency="weekly"` automatically return a fresh, incomplete copy when marked complete, ready for the next occurrence.
+- **Recurrence day filtering** — Tasks with `recur_days` (e.g. `["Mon", "Wed"]`) are only included when `today` matches one of those days.
+- **Filter by pet** — `get_tasks_for_pet()` returns only the scheduled tasks belonging to a specific pet.
+- **Filter by completion status** — `get_incomplete_tasks()` returns all tasks not yet marked complete; completed tasks are excluded from scheduling automatically.
+- **Plan explanation** — `explain_plan()` produces a human-readable summary of scheduled tasks, conflict warnings, skipped tasks, and total time used vs. available.
+
+## Running the app
+
+```bash
+python -m streamlit run app.py
+```
+
+## Running tests
+
+```bash
+python -m pytest tests/ -v
 ```
 
 ### Suggested workflow
